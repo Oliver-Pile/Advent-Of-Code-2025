@@ -10,8 +10,10 @@ import (
 
 func main() {
 	part1Count := part1()
+	part2Count := part2()
 
 	fmt.Printf("%v\n", part1Count)
+	fmt.Printf("%v\n", part2Count)
 
 }
 
@@ -68,4 +70,40 @@ func handleOver99(number int) int {
 	}
 
 	return number
+}
+
+// Cheated a bit on this one ;)
+func part2() int {
+	file, err := os.Open("day1/day1.txt")
+	if err != nil {
+		log.Printf("Error %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	position := 50
+	countZero := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		operation := string(line[0])
+		number, _ := strconv.Atoi(line[1:])
+
+		for i := 0; i < number; i++ {
+			if operation == "L" {
+				position = (position - 1 + 100) % 100
+			} else if operation == "R" {
+				position = (position + 1) % 100
+			}
+
+			if position == 0 {
+				countZero++
+			}
+		}
+
+	}
+
+	return countZero
 }
