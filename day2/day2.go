@@ -1,8 +1,10 @@
 package main
 
 import (
-	"aoc/utils"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -15,22 +17,38 @@ func main() {
 }
 
 func part1() int {
-	scanner := utils.ReadFile("days/day2.txt")
+	input, _ := os.ReadFile("day2/day2.txt")
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	splitValues := strings.Split(string(input), ",")
 
+	var invalidIDs []int
+	for _, vals := range splitValues {
+		pair := strings.Split(vals, "-")
+		lower, _ := strconv.Atoi(pair[0])
+		upper, _ := strconv.Atoi(pair[1])
+
+		for i := lower; i <= upper; i++ {
+			strVal := strconv.Itoa(i)
+			length := len(strVal)
+			if length%2 != 0 {
+				continue
+			}
+
+			if strVal[:length/2] == strVal[length/2:] {
+				invalidIDs = append(invalidIDs, i)
+			}
+
+		}
 	}
 
-	return countZero
+	sum := 0
+	for _, id := range invalidIDs {
+		sum += id
+	}
+	return sum
+
 }
 func part2() int {
-	scanner := utils.ReadFile("days/day2.txt")
 
-	for scanner.Scan() {
-		line := scanner.Text()
-
-	}
-
-	return countZero
+	return 0
 }
