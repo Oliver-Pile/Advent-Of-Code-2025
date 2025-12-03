@@ -7,7 +7,7 @@ import (
 )
 
 func ReadFile(path string) *bufio.Scanner {
-	file, err := os.Open("day1/day1.txt")
+	file, err := os.Open(path)
 	if err != nil {
 		log.Printf("Error %v", err)
 	}
