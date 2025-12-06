@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 type Range struct {
@@ -79,38 +79,48 @@ func checkFresh(line string, ranges []Range) bool {
 	return false
 }
 
+// Optimised by AI (Otherwise it would have taken too long!)
 func part2() int {
 	file, _ := os.Open("day5/day5.txt")
 	defer file.Close()
-
 	scanner := bufio.NewScanner(file)
-	unique := make(map[int]struct{})
 
-	var mu sync.Mutex
-	var wg sync.WaitGroup
+	var ranges []Range
 	for scanner.Scan() {
 		line := scanner.Text()
-
 		if strings.Contains(line, "-") {
 			r := calculateRange(line)
-
-			wg.Add(1)
-			go addFresh(r, unique, &mu, &wg)
-
+			ranges = append(ranges, r)
 		}
 	}
 
-	wg.Wait()
+	// Step 1: sort by lower bound
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i].lower < ranges[j].lower
+	})
 
-	return len(unique)
-}
+	// Step 2: merge overlapping ranges
+	merged := make([]Range, 0, len(ranges))
+	current := ranges[0]
 
-func addFresh(r Range, unique map[int]struct{}, mu *sync.Mutex, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for i := r.lower; i <= r.upper; i++ {
-		mu.Lock()
-		unique[i] = struct{}{}
-		mu.Unlock()
-
+	for _, r := range ranges[1:] {
+		if r.lower <= current.upper+1 {
+			// overlapping or adjacent → merge
+			if r.upper > current.upper {
+				current.upper = r.upper
+			}
+		} else {
+			merged = append(merged, current)
+			current = r
+		}
 	}
+	merged = append(merged, current)
+
+	// Step 3: count total unique ints
+	total := 0
+	for _, r := range merged {
+		total += (r.upper - r.lower + 1)
+	}
+
+	return total
 }
