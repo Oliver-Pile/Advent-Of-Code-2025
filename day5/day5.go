@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Range struct {
@@ -49,14 +50,17 @@ func part1() int {
 }
 
 func addRange(line string, ranges []Range) []Range {
+	r := calculateRange(line)
+	return append(ranges, r)
+}
+
+func calculateRange(line string) Range {
 	splitLine := strings.Split(line, "-")
 
 	lower, _ := strconv.Atoi(splitLine[0])
 	upper, _ := strconv.Atoi(splitLine[1])
 
-	r := Range{lower: lower, upper: upper}
-
-	return append(ranges, r)
+	return Range{lower: lower, upper: upper}
 }
 
 func checkFresh(line string, ranges []Range) bool {
@@ -75,6 +79,38 @@ func checkFresh(line string, ranges []Range) bool {
 	return false
 }
 
-func part2() any {
-	return 0
+func part2() int {
+	file, _ := os.Open("day5/day5.txt")
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	unique := make(map[int]struct{})
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.Contains(line, "-") {
+			r := calculateRange(line)
+
+			wg.Add(1)
+			go addFresh(r, unique, &mu, &wg)
+
+		}
+	}
+
+	wg.Wait()
+
+	return len(unique)
+}
+
+func addFresh(r Range, unique map[int]struct{}, mu *sync.Mutex, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := r.lower; i <= r.upper; i++ {
+		mu.Lock()
+		unique[i] = struct{}{}
+		mu.Unlock()
+
+	}
 }
